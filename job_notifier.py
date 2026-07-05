@@ -8,6 +8,7 @@ Runs standalone or via GitHub Actions (see .github/workflows/job_notifier.yml).
 
 import json
 import os
+import re
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -15,6 +16,14 @@ from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 
 import requests
+
+# Whole-word matches only — plain "in" checks let "ai" match inside "retail",
+# "ml" match inside random text, etc. This avoids that.
+ROLE_WORD_PATTERN = re.compile(r"\b(machine learning|data scien\w*|data analy\w*|\bai\b|\bml\b)\b", re.IGNORECASE)
+
+
+def contains_role_keyword(text):
+    return bool(ROLE_WORD_PATTERN.search(text))
 
 # ---------------------------------------------------------------------------
 # Config — edit these to tune your search
@@ -94,8 +103,8 @@ def fetch_arbeitnow_jobs():
         for r in resp.json().get("data", []):
             title = r.get("title", "")
             tags = " ".join(r.get("tags", []) + r.get("job_types", []))
-            text_blob = f"{title} {tags}".lower()
-            if not any(k.split()[0] in text_blob for k in ["machine", "data", "ai", "ml"]):
+            text_blob = f"{title} {tags}"
+            if not contains_role_keyword(text_blob):
                 continue
             jobs.append({
                 "id": f"arbeitnow_{r.get('slug')}",
@@ -122,7 +131,7 @@ def is_eligible(job):
     if any(good in text for good in ELIGIBLE_HINTS):
         return True
     # No strong signal either way — include title-only matches conservatively
-    return any(k.split()[0] in job["title"].lower() for k in ["machine", "data", "ai", "ml"])
+    return contains_role_keyword(job["title"])
 
 
 def load_seen_ids():
@@ -151,7 +160,7 @@ def send_email(new_jobs):
         return
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"{len(new_jobs)} new ML/AI/Data role(s) matched"
+    msg["Subject"] = f"{len(new_jobs)} new Job role(s) matched"
     msg["From"] = sender
     msg["To"] = recipient
 
