@@ -1,0 +1,39 @@
+name: Job Notifier
+
+on:
+  schedule:
+    - cron: "30 3 * * *"  # 9:00 AM IST daily (03:30 UTC)
+  workflow_dispatch: {}    # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  search-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run notifier
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: python job_notifier.py
+
+      - name: Commit updated seen_jobs.json
+        run: |
+          git config user.name "job-notifier-bot"
+          git config user.email "actions@github.com"
+          git add seen_jobs.json
+          git diff --staged --quiet && echo "No changes" || git commit -m "Update seen jobs [skip ci]"
+          git push
