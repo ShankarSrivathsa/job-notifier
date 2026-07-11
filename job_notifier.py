@@ -44,6 +44,15 @@ def detect_work_mode(job):
         return "Remote"
     return "On-site"
 
+def is_internship_like(job):
+    text = f"{job['title']} {job.get('description', '')}".lower()
+    return (
+        detect_job_type(job) == "Internship"
+        or "trainee" in text
+        or "graduate" in text
+        or "new grad" in text
+    )
+    
 def clean_snippet(description, max_len=220):
     """Strip HTML tags and trim to a short preview."""
     text = re.sub(r"<[^>]+>", " ", description or "")
@@ -63,6 +72,8 @@ SEARCH_KEYWORDS = [
     "data scientist",
     "ai engineer",
     "ml engineer",
+    "data analyst intern",
+    "research intern machine learning",
 ]
 
 # Words that suggest a role is actually entry-level / open to you
@@ -211,18 +222,37 @@ def send_email(new_jobs):
     msg["From"] = sender
     msg["To"] = recipient
 
-    lines = []
-    for j in new_jobs:
+    def render_job(j):
         snippet = clean_snippet(j.get("description", ""))
         job_type = detect_job_type(j)
         work_mode = detect_work_mode(j)
-        lines.append(
+        return (
             f"<p><b>{j['title']}</b> — {j['company']}<br>"
             f"{j['location']} · <b>{job_type}</b> · <b>{work_mode}</b> · via {j['source']}<br>"
             f"<span style='color:#555'>{snippet}</span><br>"
-            f"<a href='{j['url']}'>{j['url']}</a></p><hr>"
+            f"<a href='{j['url']}'>{j['url']}</a></p>"
         )
-    html = f"<html><body>{''.join(lines)}</body></html>"
+
+    internships = [j for j in new_jobs if is_internship_like(j)]
+    others = [j for j in new_jobs if not is_internship_like(j)]
+
+    sections = []
+
+    if internships:
+        sections.append(
+            "<h2 style='color:#0a7d3c;border-bottom:2px solid #0a7d3c;padding-bottom:4px;'>"
+            f"🎓 Internships ({len(internships)})</h2>"
+            + "<hr>".join(render_job(j) for j in internships)
+        )
+
+    if others:
+        sections.append(
+            "<h2 style='color:#333;border-bottom:2px solid #333;padding-bottom:4px;margin-top:30px;'>"
+            f"💼 Full-time Roles ({len(others)})</h2>"
+            + "<hr>".join(render_job(j) for j in others)
+        )
+
+    html = f"<html><body>{''.join(sections)}</body></html>"
     msg.attach(MIMEText(html, "html"))
 
     context = ssl.create_default_context()
