@@ -183,13 +183,19 @@ def fetch_arbeitnow_jobs():
 def is_eligible(job):
     text = f"{job['title']} {job['description']}"
     lower = text.lower()
+
+    # Role relevance is now mandatory, not optional — fixes marketing/BA
+    # interns slipping through just because they say "intern".
+    if not contains_role_keyword(text):
+        return False
+
     if any(bad in lower for bad in EXCLUDE_HINTS):
         return False
+
     if exceeds_experience_cap(text):
         return False
-    if any(good in lower for good in ELIGIBLE_HINTS):
-        return True
-    return contains_role_keyword(job["title"])
+
+    return True
 
 
 def load_seen_ids():
