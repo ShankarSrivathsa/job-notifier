@@ -25,6 +25,34 @@ ROLE_WORD_PATTERN = re.compile(r"\b(machine learning|data scien\w*|data analy\w*
 def contains_role_keyword(text):
     return bool(ROLE_WORD_PATTERN.search(text))
 
+def detect_job_type(job):
+    text = f"{job['title']} {job.get('description', '')}".lower()
+    if re.search(r"\bintern(ship)?\b", text):
+        return "Internship"
+    if re.search(r"\bpart[- ]time\b", text):
+        return "Part-time"
+    return "Full-time"
+
+
+def detect_work_mode(job):
+    text = f"{job['title']} {job.get('description', '')} {job.get('location', '')}".lower()
+    if job.get("is_remote"):
+        return "Remote"
+    if re.search(r"\bhybrid\b", text):
+        return "Hybrid"
+    if re.search(r"\bremote\b", text):
+        return "Remote"
+    return "On-site"
+
+def clean_snippet(description, max_len=220):
+    """Strip HTML tags and trim to a short preview."""
+    text = re.sub(r"<[^>]+>", " ", description or "")
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > max_len:
+        text = text[:max_len].rsplit(" ", 1)[0] + "..."
+    return text
+
+
 # ---------------------------------------------------------------------------
 # Config — edit these to tune your search
 # ---------------------------------------------------------------------------
@@ -50,6 +78,21 @@ EXCLUDE_HINTS = [
     "5+ years", "6+ years", "7+ years", "8+ years", "10+ years",
     "director", "head of",
 ]
+
+# Catches "2-4 years", "3+ years", "minimum 2 years experience", etc.
+EXPERIENCE_PATTERN = re.compile(
+    r"(\d+)\s*(?:\+|\s*-\s*\d+)?\s*(?:years?|yrs?)\s*(?:of\s*)?(?:experience|exp)\b",
+    re.IGNORECASE,
+)
+
+MAX_YEARS_EXPERIENCE = 1  # bump to 2 if you want to include 2-year-min roles too
+
+
+def exceeds_experience_cap(text):
+    for match in EXPERIENCE_PATTERN.finditer(text):
+        if int(match.group(1)) > MAX_YEARS_EXPERIENCE:
+            return True
+    return False
 
 ADZUNA_COUNTRY = "in"  # India
 SEEN_JOBS_FILE = Path(__file__).parent / "seen_jobs.json"
@@ -85,6 +128,7 @@ def fetch_adzuna_jobs():
                     "title": r.get("title", "").strip(),
                     "company": r.get("company", {}).get("display_name", "Unknown"),
                     "location": r.get("location", {}).get("display_name", ""),
+                    "is_remote": False,
                     "url": r.get("redirect_url", ""),
                     "description": r.get("description", ""),
                     "source": "Adzuna",
@@ -110,7 +154,8 @@ def fetch_arbeitnow_jobs():
                 "id": f"arbeitnow_{r.get('slug')}",
                 "title": title,
                 "company": r.get("company_name", "Unknown"),
-                "location": "Remote" if r.get("remote") else r.get("location", ""),
+                "location": r.get("location", "") or "Not specified",
+                "is_remote": bool(r.get("remote")),
                 "url": r.get("url", ""),
                 "description": r.get("description", ""),
                 "source": "Arbeitnow",
@@ -125,12 +170,14 @@ def fetch_arbeitnow_jobs():
 # ---------------------------------------------------------------------------
 
 def is_eligible(job):
-    text = f"{job['title']} {job['description']}".lower()
-    if any(bad in text for bad in EXCLUDE_HINTS):
+    text = f"{job['title']} {job['description']}"
+    lower = text.lower()
+    if any(bad in lower for bad in EXCLUDE_HINTS):
         return False
-    if any(good in text for good in ELIGIBLE_HINTS):
+    if exceeds_experience_cap(text):
+        return False
+    if any(good in lower for good in ELIGIBLE_HINTS):
         return True
-    # No strong signal either way — include title-only matches conservatively
     return contains_role_keyword(job["title"])
 
 
@@ -166,9 +213,13 @@ def send_email(new_jobs):
 
     lines = []
     for j in new_jobs:
+        snippet = clean_snippet(j.get("description", ""))
+        job_type = detect_job_type(j)
+        work_mode = detect_work_mode(j)
         lines.append(
             f"<p><b>{j['title']}</b> — {j['company']}<br>"
-            f"{j['location']} · via {j['source']}<br>"
+            f"{j['location']} · <b>{job_type}</b> · <b>{work_mode}</b> · via {j['source']}<br>"
+            f"<span style='color:#555'>{snippet}</span><br>"
             f"<a href='{j['url']}'>{j['url']}</a></p><hr>"
         )
     html = f"<html><body>{''.join(lines)}</body></html>"
