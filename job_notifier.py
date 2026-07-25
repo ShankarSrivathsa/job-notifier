@@ -67,8 +67,9 @@ def clean_snippet(description, max_len=220):
 # ---------------------------------------------------------------------------
 
 SEARCH_KEYWORDS = [
+    "entry level machine learning intern",
     "machine learning intern",
-    "machine learning engineer",
+    "junior machine learning engineer",
     "data scientist",
     "ai engineer",
     "ml engineer",
@@ -96,7 +97,15 @@ EXPERIENCE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-MAX_YEARS_EXPERIENCE = 1  # bump to 2 if you want to include 2-year-min roles too
+MAX_YEARS_EXPERIENCE = 2  # bump to 2 if you want to include 2-year-min roles too
+
+OWNERSHIP_HINTS = [
+    "design and build", "own the", "production-grade", "architect",
+    "define the roadmap", "drive the strategy", "mentor",
+]
+
+def has_ownership_language(text):
+    return any(hint in text for hint in OWNERSHIP_HINTS)
 
 
 def exceeds_experience_cap(text):
@@ -188,15 +197,15 @@ def is_eligible(job):
     # interns slipping through just because they say "intern".
     if not contains_role_keyword(text):
         return False
-
     if any(bad in lower for bad in EXCLUDE_HINTS):
         return False
-
     if exceeds_experience_cap(text):
         return False
-
-    return True
-
+    if has_ownership_language(lower):
+        return False
+    if any(hint in lower for hint in ELIGIBLE_HINTS):
+        return True
+    return False
 
 def load_seen_ids():
     if SEEN_JOBS_FILE.exists():
