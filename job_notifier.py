@@ -67,21 +67,26 @@ def clean_snippet(description, max_len=220):
 # ---------------------------------------------------------------------------
 
 SEARCH_KEYWORDS = [
-    "entry level machine learning intern",
-    "machine learning intern",
-    "junior machine learning engineer",
-    "data scientist",
-    "ai engineer",
-    "ml engineer",
-    "data analyst intern",
-    "research intern machine learning",
+    "Machine Learning Engineer Associate",
+    "ML Engineer Fresher",
+    "Associate Machine Learning Engineer",
+    "Junior Machine Learning Engineer",
+    "Machine Learning Engineer - New Grad",
+    "AI/ML Engineer Trainee",
+    "Graduate Engineer Trainee AI ML",
+    "AI Engineer Fresher",
+    "Applied ML Engineer Associate",
+    "ML Ops Engineer Fresher",
+    "AI/ML Developer Entry Level",
+    "Machine Learning Intern",
+    "AI Research Associate",
 ]
 
 # Words that suggest a role is actually entry-level / open to you
 ELIGIBLE_HINTS = [
     "intern", "internship", "fresher", "entry level", "entry-level",
     "graduate", "junior", "trainee", "0-1 year", "0-2 years", "campus",
-    "associate", "new grad",
+    "associate", "new grad", "graduate-engineer-trainee"
 ]
 
 # Words that mean "skip this, it's not for you right now"
@@ -97,7 +102,7 @@ EXPERIENCE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-MAX_YEARS_EXPERIENCE = 2  # bump to 2 if you want to include 2-year-min roles too
+MAX_YEARS_EXPERIENCE = 1 # bump to 2 if you want to include 2-year-min roles too
 
 OWNERSHIP_HINTS = [
     "design and build", "own the", "production-grade", "architect",
