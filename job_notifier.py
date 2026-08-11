@@ -19,7 +19,7 @@ import requests
 
 # Whole-word matches only — plain "in" checks let "ai" match inside "retail",
 # "ml" match inside random text, etc. This avoids that.
-ROLE_WORD_PATTERN = re.compile(r"\b(machine learning|data scien\w*|data analy\w*|\bai\b|\bml\b)\b", re.IGNORECASE)
+ROLE_WORD_PATTERN = re.compile(r"\b(machine learning|\bai\b|\bml\b)\b", re.IGNORECASE)
 
 
 def contains_role_keyword(text):
