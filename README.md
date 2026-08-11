@@ -1,7 +1,6 @@
 # Job Notifier — ML/AI/Data roles
 
-Searches Adzuna (India) + Arbeitnow (remote) daily, filters for entry-level/
-intern/fresher roles, and emails you the new ones. Runs free on GitHub
+Searches Adzuna (India) + Arbeitnow (filtered to India-based remote roles) daily, filters for entry-level/intern/fresher roles, and emails you the new ones. Runs free on GitHub
 Actions — no laptop needed once it's set up.
 
 ## Setup (about 15 minutes, one-time)
@@ -48,6 +47,7 @@ logs, then check your inbox.
 Open `job_notifier.py` and edit:
 - `SEARCH_KEYWORDS` — the role searches it runs
 - `ELIGIBLE_HINTS` / `EXCLUDE_HINTS` — the keyword filter logic
+- `INDIA_SIGNALS` — the location/description whitelist that filters out non-India remote roles (e.g. "Remote, Germany"). Add a city if you're getting false negatives.
 - Cron schedule in the workflow file if you want a different time
 
 ## Honest limitations
@@ -61,3 +61,4 @@ Open `job_notifier.py` and edit:
 - `seen_jobs.json` is how it avoids re-emailing the same job — the workflow
   commits it back to the repo after each run, so don't edit that file by
   hand.
+- The India filter is a whitelist match on location/description text — a legit India-remote job with an unusually worded location field could get filtered out. If you notice real matches disappearing, check is_india_job in the script.
