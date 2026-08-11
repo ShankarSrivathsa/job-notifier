@@ -109,6 +109,18 @@ OWNERSHIP_HINTS = [
     "define the roadmap", "drive the strategy", "mentor",
 ]
 
+# Whitelist of India signals. A job only passes if location+description
+# mentions one of these — no exclude list needed, absence = rejected.
+INDIA_SIGNALS = [
+    "india", "bengaluru", "bangalore", "hyderabad", "pune", "mumbai",
+    "delhi", "gurugram", "gurgaon", "noida", "chennai", "kolkata",
+    "ahmedabad", "remote - india", "remote (india)", "remote, india"
+]
+
+def is_india_job(location: str, description: str = "") -> bool:
+    text = f"{location} {description}".lower()
+    return any(signal in text for signal in INDIA_SIGNALS)
+
 def has_ownership_language(text):
     return any(hint in text for hint in OWNERSHIP_HINTS)
 
@@ -291,7 +303,10 @@ def main():
     all_jobs = fetch_adzuna_jobs() + fetch_arbeitnow_jobs()
     print(f"Fetched {len(all_jobs)} raw results.")
 
-    eligible = [j for j in all_jobs if is_eligible(j)]
+    india_jobs = [j for j in all_jobs if is_india_job(j["location"], j.get("description", ""))]
+    print(f"{len(india_jobs)} are India-based.")
+
+    eligible = [j for j in india_jobs if is_eligible(j)]
     print(f"{len(eligible)} passed eligibility filter.")
 
     seen = load_seen_ids()
