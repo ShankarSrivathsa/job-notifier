@@ -3,6 +3,8 @@
 Searches Adzuna (India) + Arbeitnow (filtered to India-based remote roles) daily, filters for entry-level/intern/fresher roles, and emails you the new ones. Runs free on GitHub
 Actions — no laptop needed once it's set up.
 
+This project was developed with assistance from AI tools (specifically Claude) for code generation and refactoring.
+
 ## Setup (about 15 minutes, one-time)
 
 ### 1. Create a new GitHub repo
