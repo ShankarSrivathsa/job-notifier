@@ -1,4 +1,4 @@
-# Job Notifier — ML/AI/Data roles
+# Job Notifier — ML/AI roles
 
 Searches Adzuna (India) + Arbeitnow (filtered to India-based remote roles) daily, filters for entry-level/intern/fresher roles, and emails you the new ones. Runs free on GitHub
 Actions — no laptop needed once it's set up.
