@@ -1,6 +1,6 @@
 """
 Job Application Notifier
-Searches for ML/AI/Data roles across free job APIs, filters for entry-level
+Searches for ML/AI roles across free job APIs, filters for entry-level
 eligibility, skips jobs already seen, and emails new matches.
 
 Runs standalone or via GitHub Actions (see .github/workflows/job_notifier.yml).
@@ -302,6 +302,15 @@ def send_email(new_jobs):
 def main():
     all_jobs = fetch_adzuna_jobs() + fetch_arbeitnow_jobs()
     print(f"Fetched {len(all_jobs)} raw results.")
+
+    # Dedupe within this run — Adzuna gets queried once per keyword in
+    # SEARCH_KEYWORDS, and overlapping keywords can return the same job
+    # multiple times with the same id. Keep first occurrence only.
+    deduped = {}
+    for j in all_jobs:
+        deduped.setdefault(j["id"], j)
+    all_jobs = list(deduped.values())
+    print(f"{len(all_jobs)} unique after in-run dedup.")
 
     india_jobs = [j for j in all_jobs if is_india_job(j["location"], j.get("description", ""))]
     print(f"{len(india_jobs)} are India-based.")
