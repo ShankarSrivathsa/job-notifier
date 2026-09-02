@@ -80,6 +80,9 @@ SEARCH_KEYWORDS = [
     "AI/ML Developer Entry Level",
     "Machine Learning Intern",
     "AI Research Associate",
+    "Data Science Intern",
+    "Associate Data Scientist",
+    "Junior Data Scientist"
 ]
 
 # Words that suggest a role is actually entry-level / open to you
@@ -91,7 +94,7 @@ ELIGIBLE_HINTS = [
 
 # Words that mean "skip this, it's not for you right now"
 EXCLUDE_HINTS = [
-    "senior", "sr.", "lead", "principal", "staff engineer", "manager",
+    "senior", "sr.", "lead", "principal", "staff engineer", "manager", "3+ years", "2+ years"
     "5+ years", "6+ years", "7+ years", "8+ years", "10+ years",
     "director", "head of",
 ]
